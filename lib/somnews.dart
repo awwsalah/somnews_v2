@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:somnews_v2/splashscreen.dart';
 
 class SomNews extends StatelessWidget {
   const SomNews({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const NewsScreen();
+    return const SplashScreen();
   }
 }
 
@@ -28,7 +29,13 @@ class _NewsScreenState extends State<NewsScreen> {
         backgroundColor: Colors.green,
         centerTitle: true,
       ),
-      body: Center(child: Text("welcome to this news application")),
+      body: Center(
+        child: Image.asset(
+          'assets/images/somnews2.png',
+          width: 100,
+          height: 100,
+        ),
+      ),
     );
   }
 }
