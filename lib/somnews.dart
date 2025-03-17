@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:somnews_v2/splashscreen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SomNews extends StatelessWidget {
   const SomNews({super.key});
@@ -17,8 +19,52 @@ class NewsScreen extends StatefulWidget {
   State<NewsScreen> createState() => _NewsScreenState();
 }
 
-class _NewsScreenState extends State<NewsScreen> {
+class _NewsScreenState extends State<NewsScreen>
+    with SingleTickerProviderStateMixin {
+  List<Map<String, dynamic>> articles = [];
+  final String apiKey = '6d926d933e40424b83238351c3e69adb';
+  late AnimationController _controller;
+  String selectedCategory = 'general';
+  final List<String> categories = [
+    'general',
+    'business',
+    'entertainment',
+    'health',
+    'science',
+    'sports',
+    'technology',
+  ];
+
   @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(microseconds: 500),
+    );
+    fetchNews();
+  }
+
+  Future<void> fetchNews() async {
+    setState(() {
+      articles = [];
+    });
+    final url =
+        'https://newsapi.org/v2/top-headlines?country=us&category=$selectedCategory&apiKey=$apiKey';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        articles = List<Map<String, dynamic>>.from(data['articles']);
+        _controller.reset();
+        _controller.forward();
+      });
+    } else {
+      throw Exception('Masoo Qabsanyo Net ka');
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -29,13 +75,7 @@ class _NewsScreenState extends State<NewsScreen> {
         backgroundColor: Colors.green,
         centerTitle: true,
       ),
-      body: Center(
-        child: Image.asset(
-          'assets/images/somnews2.png',
-          width: 100,
-          height: 100,
-        ),
-      ),
+      body: Card(child: Text('test')),
     );
   }
 }
