@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/api_config.dart';
 import '../config/theme_config.dart';
 import '../providers/news_provider.dart';
+import '../widgets/category_chip.dart';
 import '../widgets/news_card.dart';
-// TODO: Import ArticleDetailScreen when it's created
-// import 'article_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -32,70 +32,106 @@ class _HomeScreenState extends State<HomeScreen> {
     final newsProvider = context.watch<NewsProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SomNews'),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: ThemeConfig.primaryGradient,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            title: const Text('SomNews'),
+            floating: true,
+            pinned: true,
+            snap: false,
+            expandedHeight: 120,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: ThemeConfig.primaryGradient,
+              ),
+            ),
           ),
-        ),
+          SliverToBoxAdapter(child: _buildCategoryChips(newsProvider)),
+          _buildBody(newsProvider),
+        ],
       ),
-      body: _buildBody(newsProvider),
+    );
+  }
+
+  Widget _buildCategoryChips(NewsProvider newsProvider) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      color: Colors.white,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: ApiConfig.categories.length,
+        itemBuilder: (context, index) {
+          final category = ApiConfig.categories[index];
+          final isSelected = newsProvider.selectedCategory == category;
+
+          Widget chip = CategoryChip(
+            label: category[0].toUpperCase() + category.substring(1),
+            isSelected: isSelected,
+            onTap: () {
+              newsProvider.fetchNews(category);
+            },
+          );
+
+          // Wrap with GradientChip only when selected
+          return isSelected
+              ? GradientChip(gradient: ThemeConfig.primaryGradient, child: chip)
+              : chip;
+        },
+      ),
     );
   }
 
   Widget _buildBody(NewsProvider newsProvider) {
     if (newsProvider.isLoading && newsProvider.articles.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      // Use SliverFillRemaining for scrollable content areas
+      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
     }
 
     if (newsProvider.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                newsProvider.error!,
-                textAlign: TextAlign.center,
-                style: ThemeConfig.bodyStyle.copyWith(color: Colors.red),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => _refreshNews(context),
-                child: const Text('Retry'),
-              )
-            ],
+      return SliverFillRemaining(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  newsProvider.error!,
+                  textAlign: TextAlign.center,
+                  style: ThemeConfig.bodyStyle.copyWith(color: Colors.red),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => _refreshNews(context),
+                  child: const Text('Retry'),
+                )
+              ],
+            ),
           ),
         ),
       );
     }
 
     if (newsProvider.articles.isEmpty) {
-      return const Center(child: Text('No articles found.'));
+      return const SliverFillRemaining(child: Center(child: Text('No articles found.')));
     }
 
-    return RefreshIndicator(
-      onRefresh: () => _refreshNews(context),
-      child: ListView.builder(
-        itemCount: newsProvider.articles.length,
-        itemBuilder: (context, index) {
+    // A SliverList is more efficient in a CustomScrollView than a ListView
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
           final article = newsProvider.articles[index];
           return NewsCard(
             article: article,
             onTap: () {
               // TODO: Navigate to ArticleDetailScreen
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (_) => ArticleDetailScreen(article: article),
-              //   ),
-              // );
               print('Tapped on article: ${article.title}');
             },
           );
         },
+        childCount: newsProvider.articles.length,
       ),
     );
   }
