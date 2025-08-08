@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:somnews_v2/somnews.dart';
+import 'package:provider/provider.dart';
+import 'config/theme_config.dart';
+import 'providers/language_provider.dart';
+import 'providers/news_provider.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -10,10 +14,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'SoNews',
-      home: SomNews(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => NewsProvider()),
+      ],
+      child: MaterialApp(
+        title: 'SomNews',
+        theme: ThemeConfig.getTheme(),
+        home: const SplashScreen(),
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

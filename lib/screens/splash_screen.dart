@@ -1,94 +1,79 @@
+import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:flutter/material.dart'; //waa code ku saabsan flutter
-import 'package:somnews_v2/somnews.dart';
+import '../config/theme_config.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  SplashScreenState createState() => SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Alignment> _animation1;
-  late Animation<Alignment> _animation2;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 2),
       vsync: this,
-    )..repeat(reverse: true);
-
-    _animation1 = Tween<Alignment>(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    ).animate(_controller);
-
-    _animation2 = Tween<Alignment>(
-      begin: Alignment.bottomCenter,
-      end: Alignment.topCenter,
-    ).animate(_controller);
-
-    Timer(Duration(seconds: 2), () {
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+    _controller.forward();
+    
+    Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => NewsScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: _animation1.value,
-                end: _animation2.value,
-                colors: [
-                  const Color.fromRGBO(218, 253, 185, 1),
-                  const Color.fromRGBO(69, 197, 175, 1),
-                  const Color.fromRGBO(154, 236, 164, 1),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/somnews2.png',
-                    width: 100,
-                    height: 100,
-                  ),
-                  Text(
-                    "SOMNEWS",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: ThemeConfig.primaryGradient,
+        ),
+        child: Center(
+          child: FadeTransition(
+            opacity: _animation,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/somnews2.png',
+                  width: 150,
+                  height: 150,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'SomNews',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
