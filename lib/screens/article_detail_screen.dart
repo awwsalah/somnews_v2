@@ -6,42 +6,12 @@ import '../config/theme_config.dart';
 import '../localization/app_localizations.dart';
 import '../models/article_model.dart';
 import '../providers/language_provider.dart';
-import '../providers/news_provider.dart';
 import 'package:intl/intl.dart';
 
-class ArticleDetailScreen extends StatefulWidget {
+class ArticleDetailScreen extends StatelessWidget {
   final Article article;
 
   const ArticleDetailScreen({Key? key, required this.article}) : super(key: key);
-
-  @override
-  State<ArticleDetailScreen> createState() => _ArticleDetailScreenState();
-}
-
-class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
-  Map<String, String> _translatedContent = {};
-  bool _isTranslating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _translateIfNeeded();
-  }
-
-  Future<void> _translateIfNeeded() async {
-    final languageProvider = context.read<LanguageProvider>();
-    if (languageProvider.isSomali) {
-      setState(() => _isTranslating = true);
-      final newsProvider = context.read<NewsProvider>();
-      final result = await newsProvider.translateArticle(widget.article);
-      if (mounted) {
-        setState(() {
-          _translatedContent = result;
-          _isTranslating = false;
-        });
-      }
-    }
-  }
 
   Future<void> _launchURL(String? urlString) async {
     if (urlString == null) return;
@@ -55,36 +25,48 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
     final localizations = AppLocalizations(languageProvider.currentLanguage);
+    final isSomali = languageProvider.isSomali;
 
-    final displayTitle = languageProvider.isSomali
-        ? _translatedContent['title'] ?? widget.article.title ?? ''
-        : widget.article.title ?? '';
+    final displayTitle = isSomali && (article.translatedTitle?.isNotEmpty ?? false)
+        ? article.translatedTitle!
+        : article.title ?? '';
         
-    final displayDescription = languageProvider.isSomali
-        ? _translatedContent['description'] ?? widget.article.description ?? ''
-        : widget.article.description ?? '';
+    final displayDescription = isSomali && (article.translatedDescription?.isNotEmpty ?? false)
+        ? article.translatedDescription!
+        : article.description ?? '';
+
+    final displayContent = isSomali && (article.translatedContent?.isNotEmpty ?? false)
+        ? article.translatedContent!
+        : article.content ?? '';
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(),
-          _buildSliverContent(context, localizations, displayTitle, displayDescription),
+          _buildSliverAppBar(displayTitle),
+          _buildSliverContent(context, localizations, displayTitle, displayDescription, displayContent),
         ],
       ),
     );
   }
 
-  Widget _buildSliverAppBar() {
+  Widget _buildSliverAppBar(String title) {
     return SliverAppBar(
       expandedHeight: 300.0,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
-        background: widget.article.urlToImage != null
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16.0),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        titlePadding: const EdgeInsets.only(left: 50, right: 50, bottom: 16),
+        background: article.urlToImage != null
             ? Stack(
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: widget.article.urlToImage!,
+                    imageUrl: article.urlToImage!,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) => Container(
                       decoration: BoxDecoration(gradient: ThemeConfig.primaryGradient),
@@ -107,7 +89,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     );
   }
 
-  Widget _buildSliverContent(BuildContext context, AppLocalizations localizations, String title, String description) {
+  Widget _buildSliverContent(BuildContext context, AppLocalizations localizations, String title, String description, String content) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -120,19 +102,20 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
-            if (_isTranslating)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(),
-              ))
-            else
+            Text(
+              description,
+              style: ThemeConfig.bodyStyle.copyWith(fontSize: 16, height: 1.5),
+            ),
+            if (content.isNotEmpty && content != description) ...[
+              const SizedBox(height: 16),
               Text(
-                description,
+                content,
                 style: ThemeConfig.bodyStyle.copyWith(fontSize: 16, height: 1.5),
               ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => _launchURL(widget.article.url),
+              onPressed: () => _launchURL(article.url),
               icon: const Icon(Icons.open_in_browser),
               label: Text(localizations.translate('read_more')),
               style: ElevatedButton.styleFrom(
@@ -152,15 +135,15 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       children: [
         Expanded(
           child: Text(
-            widget.article.source?.name ?? localizations.translate('unknown_source'),
+            article.source?.name ?? localizations.translate('unknown_source'),
             style: ThemeConfig.captionStyle.copyWith(fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (widget.article.publishedAt != null) ...[
+        if (article.publishedAt != null) ...[
           const SizedBox(width: 16),
           Text(
-            DateFormat('MMM d, yyyy').format(DateTime.parse(widget.article.publishedAt!)),
+            DateFormat('MMM d, yyyy').format(DateTime.parse(article.publishedAt!)),
             style: ThemeConfig.captionStyle,
           ),
         ],

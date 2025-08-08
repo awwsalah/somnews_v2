@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../models/article_model.dart';
+import '../providers/language_provider.dart';
 import 'package:intl/intl.dart';
 
 
@@ -17,15 +19,27 @@ class NewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // We watch the language provider to know which text to display
+    final languageProvider = context.watch<LanguageProvider>();
+    final isSomali = languageProvider.isSomali;
+
+    final displayTitle = isSomali && (article.translatedTitle?.isNotEmpty ?? false)
+        ? article.translatedTitle!
+        : article.title ?? '';
+        
+    final displayDescription = isSomali && (article.translatedDescription?.isNotEmpty ?? false)
+        ? article.translatedDescription!
+        : article.description ?? '';
+
     return Card(
-      clipBehavior: Clip.antiAlias, // Ensures the content respects the card's border radius
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildImage(),
-            _buildContent(),
+            _buildContent(displayTitle, displayDescription),
           ],
         ),
       ),
@@ -51,17 +65,13 @@ class NewsCard extends StatelessWidget {
             child: const Icon(Icons.broken_image, color: Colors.white, size: 50),
           ),
         ),
-        // Gradient overlay
         Container(
           height: 200,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.8),
-              ],
+              colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
             ),
           ),
         ),
@@ -69,21 +79,21 @@ class NewsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(String title, String description) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            article.title ?? '',
+            title,
             style: ThemeConfig.titleStyle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
           Text(
-            article.description ?? '',
+            description,
             style: ThemeConfig.bodyStyle,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
