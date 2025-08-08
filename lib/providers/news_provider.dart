@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/article_model.dart';
 import '../services/news_service.dart';
-import '../services/translation_service.dart'; // Import the new service
+import '../services/translation_service.dart';
 
 class NewsProvider extends ChangeNotifier {
   final NewsService _newsService = NewsService();
-  final TranslationService _translationService = TranslationService(); // Add instance
+  final TranslationService _translationService = TranslationService();
 
   List<Article> _articles = [];
   List<Article> _searchResults = [];
   String _selectedCategory = 'general';
   bool _isLoading = false;
   String? _error;
-  bool _shouldTranslate = false; // Flag to check if translation is needed
+  bool _shouldTranslate = false;
 
   List<Article> get articles => _articles;
   List<Article> get searchResults => _searchResults;
@@ -20,9 +20,17 @@ class NewsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // This will be called from the UI to set the translation state
   void setShouldTranslate(bool value) {
+    if (_shouldTranslate == value) return; // Avoid unnecessary work
     _shouldTranslate = value;
+    // If we switch to Somali, translate the current list.
+    // If we switch back to English, we don't need to do anything as the original is preserved.
+    if (_shouldTranslate && _articles.isNotEmpty) {
+      _translateArticleList(_articles).then((translated) {
+        _articles = translated;
+        notifyListeners();
+      });
+    }
   }
 
   Future<void> fetchNews(String category) async {
@@ -32,7 +40,12 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _articles = await _newsService.getTopHeadlines(category: category);
+      List<Article> fetchedArticles = await _newsService.getTopHeadlines(category: category);
+      if (_shouldTranslate) {
+        _articles = await _translateArticleList(fetchedArticles);
+      } else {
+        _articles = fetchedArticles;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -52,7 +65,12 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _searchResults = await _newsService.searchNews(query: query);
+      List<Article> searchedArticles = await _newsService.searchNews(query: query);
+      if (_shouldTranslate) {
+        _searchResults = await _translateArticleList(searchedArticles);
+      } else {
+        _searchResults = searchedArticles;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -61,11 +79,21 @@ class NewsProvider extends ChangeNotifier {
     }
   }
 
-  // Method to be called from ArticleDetailScreen
-  Future<Map<String, String>> translateArticle(Article article) async {
-    if (!_shouldTranslate) {
-      return {'title': article.title ?? '', 'description': article.description ?? ''};
+  // Helper to translate a list of articles
+  Future<List<Article>> _translateArticleList(List<Article> articles) async {
+    final List<Future<Article>> translationFutures = [];
+
+    for (final article in articles) {
+      translationFutures.add(
+        _translationService.translateArticle(article).then((translatedMap) {
+          return article.copyWith(
+            translatedTitle: translatedMap['title'],
+            translatedDescription: translatedMap['description'],
+            translatedContent: translatedMap['content'],
+          );
+        }),
+      );
     }
-    return await _translationService.translateArticle(article);
+    return await Future.wait(translationFutures);
   }
 }

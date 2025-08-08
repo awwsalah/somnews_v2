@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 class ThemeConfig {
   static ThemeData getTheme() {
     return ThemeData(
-      primarySwatch: Colors.blue,
+      // Using ColorScheme.fromSeed is the modern approach for Material 3
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       useMaterial3: true,
-      scaffoldBackgroundColor: Colors.grey[50],
+      scaffoldBackgroundColor: Colors.white, // Use plain white for a cleaner look
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         elevation: 0,

@@ -7,6 +7,11 @@ class Article {
   final String? author;
   final String? content;
   final Source? source;
+  
+  // Fields to hold translated text
+  final String? translatedTitle;
+  final String? translatedDescription;
+  final String? translatedContent;
 
   Article({
     this.title,
@@ -17,6 +22,9 @@ class Article {
     this.author,
     this.content,
     this.source,
+    this.translatedTitle,
+    this.translatedDescription,
+    this.translatedContent,
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
@@ -29,6 +37,34 @@ class Article {
       author: json['author'],
       content: json['content'],
       source: json['source'] != null ? Source.fromJson(json['source']) : null,
+    );
+  }
+
+  Article copyWith({
+    String? title,
+    String? description,
+    String? url,
+    String? urlToImage,
+    String? publishedAt,
+    String? author,
+    String? content,
+    Source? source,
+    String? translatedTitle,
+    String? translatedDescription,
+    String? translatedContent,
+  }) {
+    return Article(
+      title: title ?? this.title,
+      description: description ?? this.description,
+      url: url ?? this.url,
+      urlToImage: urlToImage ?? this.urlToImage,
+      publishedAt: publishedAt ?? this.publishedAt,
+      author: author ?? this.author,
+      content: content ?? this.content,
+      source: source ?? this.source,
+      translatedTitle: translatedTitle ?? this.translatedTitle,
+      translatedDescription: translatedDescription ?? this.translatedDescription,
+      translatedContent: translatedContent ?? this.translatedContent,
     );
   }
 }
