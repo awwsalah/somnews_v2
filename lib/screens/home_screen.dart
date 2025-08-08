@@ -10,6 +10,7 @@ import '../widgets/language_dropdown.dart';
 import '../widgets/news_card.dart';
 import 'article_detail_screen.dart';
 import 'search_screen.dart';
+import '../widgets/news_card_shimmer.dart'; // Add this import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -108,7 +109,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody(BuildContext context, NewsProvider newsProvider, AppLocalizations localizations) {
     if (newsProvider.isLoading && newsProvider.articles.isEmpty) {
-      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const NewsCardShimmer(),
+          childCount: 5, // Show 5 shimmer cards
+        ),
+      );
     }
 
     if (newsProvider.error != null) {
