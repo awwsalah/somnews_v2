@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/api_config.dart';
 import '../config/theme_config.dart';
+import '../localization/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../providers/news_provider.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/language_dropdown.dart';
 import '../widgets/news_card.dart';
-import 'search_screen.dart';
 import 'article_detail_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -32,12 +35,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final newsProvider = context.watch<NewsProvider>();
+    final languageProvider = context.watch<LanguageProvider>();
+    final localizations = AppLocalizations(languageProvider.currentLanguage);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            title: const Text('SomNews'),
+            title: Text(localizations.translate('app_title')),
             floating: true,
             pinned: true,
             snap: false,
@@ -57,16 +62,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
+              LanguageDropdown(
+                currentLanguage: languageProvider.currentLanguage,
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    languageProvider.setLanguage(newValue);
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
             ],
           ),
-          SliverToBoxAdapter(child: _buildCategoryChips(newsProvider)),
-          _buildBody(newsProvider),
+          SliverToBoxAdapter(child: _buildCategoryChips(newsProvider, localizations)),
+          _buildBody(context, newsProvider, localizations),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryChips(NewsProvider newsProvider) {
+  Widget _buildCategoryChips(NewsProvider newsProvider, AppLocalizations localizations) {
     return Container(
       height: 50,
       color: Colors.white,
@@ -78,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final category = ApiConfig.categories[index];
           return CategoryChip(
-            label: category[0].toUpperCase() + category.substring(1),
+            label: localizations.translate(category),
             isSelected: newsProvider.selectedCategory == category,
             onTap: () {
               newsProvider.fetchNews(category);
@@ -89,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBody(NewsProvider newsProvider) {
+  Widget _buildBody(BuildContext context, NewsProvider newsProvider, AppLocalizations localizations) {
     if (newsProvider.isLoading && newsProvider.articles.isEmpty) {
       return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
     }
@@ -103,14 +117,14 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  newsProvider.error!,
+                  localizations.translate('error_loading'),
                   textAlign: TextAlign.center,
                   style: ThemeConfig.bodyStyle.copyWith(color: Colors.red),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => _refreshNews(context),
-                  child: const Text('Retry'),
+                  child: Text(localizations.translate('retry')),
                 )
               ],
             ),
@@ -120,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (newsProvider.articles.isEmpty) {
-      return const SliverFillRemaining(child: Center(child: Text('No articles found.')));
+      return SliverFillRemaining(
+          child: Center(child: Text(localizations.translate('no_results'))));
     }
 
     return SliverList(
