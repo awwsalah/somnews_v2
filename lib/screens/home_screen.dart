@@ -6,6 +6,7 @@ import '../providers/news_provider.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/news_card.dart';
 import 'search_screen.dart';
+import 'article_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -129,8 +130,12 @@ class _HomeScreenState extends State<HomeScreen> {
           return NewsCard(
             article: article,
             onTap: () {
-              // TODO: Navigate to ArticleDetailScreen
-              print('Tapped on article: ${article.title}');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ArticleDetailScreen(article: article),
+                ),
+              );
             },
           );
         },

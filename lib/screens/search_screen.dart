@@ -4,8 +4,7 @@ import 'dart:async';
 import '../config/theme_config.dart';
 import '../providers/news_provider.dart';
 import '../widgets/news_card.dart';
-// TODO: Import ArticleDetailScreen when it's created
-// import 'article_detail_screen.dart';
+import 'article_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -88,8 +87,12 @@ class _SearchScreenState extends State<SearchScreen> {
               return NewsCard(
                 article: article,
                 onTap: () {
-                  // TODO: Navigate to ArticleDetailScreen
-                  print('Tapped on article: ${article.title}');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ArticleDetailScreen(article: article),
+                    ),
+                  );
                 },
               );
             },
