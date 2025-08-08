@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/article_model.dart';
-// We will create and import services later
+import '../services/news_service.dart';
 
 class NewsProvider extends ChangeNotifier {
+  final NewsService _newsService = NewsService();
+
   List<Article> _articles = [];
   List<Article> _searchResults = [];
   String _selectedCategory = 'general';
@@ -15,7 +17,40 @@ class NewsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // We will implement this logic in the upcoming steps
-  Future<void> fetchNews(String category) async {}
-  Future<void> searchNews(String query) async {}
+  Future<void> fetchNews(String category) async {
+    _selectedCategory = category;
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _articles = await _newsService.getTopHeadlines(category: category);
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> searchNews(String query) async {
+    if (query.isEmpty) {
+      _searchResults = [];
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _searchResults = await _newsService.searchNews(query: query);
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
