@@ -5,6 +5,7 @@ import '../config/theme_config.dart';
 import '../providers/news_provider.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/news_card.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -45,6 +46,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 gradient: ThemeConfig.primaryGradient,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  );
+                },
+              ),
+            ],
           ),
           SliverToBoxAdapter(child: _buildCategoryChips(newsProvider)),
           _buildBody(newsProvider),
@@ -56,28 +68,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCategoryChips(NewsProvider newsProvider) {
     return Container(
       height: 50,
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
       color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: ApiConfig.categories.length,
         itemBuilder: (context, index) {
           final category = ApiConfig.categories[index];
-          final isSelected = newsProvider.selectedCategory == category;
-
-          Widget chip = CategoryChip(
+          return CategoryChip(
             label: category[0].toUpperCase() + category.substring(1),
-            isSelected: isSelected,
+            isSelected: newsProvider.selectedCategory == category,
             onTap: () {
               newsProvider.fetchNews(category);
             },
           );
-
-          // Wrap with GradientChip only when selected
-          return isSelected
-              ? GradientChip(gradient: ThemeConfig.primaryGradient, child: chip)
-              : chip;
         },
       ),
     );
@@ -85,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody(NewsProvider newsProvider) {
     if (newsProvider.isLoading && newsProvider.articles.isEmpty) {
-      // Use SliverFillRemaining for scrollable content areas
       return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
     }
 
@@ -118,7 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return const SliverFillRemaining(child: Center(child: Text('No articles found.')));
     }
 
-    // A SliverList is more efficient in a CustomScrollView than a ListView
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
