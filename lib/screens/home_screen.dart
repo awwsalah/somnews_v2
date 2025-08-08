@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final languageProvider = context.watch<LanguageProvider>();
     final localizations = AppLocalizations(languageProvider.currentLanguage);
 
+    // Add this line to link the language state to the news provider
+    newsProvider.setShouldTranslate(languageProvider.isSomali);
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
