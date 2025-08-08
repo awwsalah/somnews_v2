@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../providers/news_provider.dart';
+import '../widgets/news_card.dart';
+// TODO: Import ArticleDetailScreen when it's created
+// import 'article_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -14,16 +17,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to safely access context after the build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // We listen: false here because we're in initState
       context.read<NewsProvider>().fetchNews('general');
     });
   }
 
+  Future<void> _refreshNews(BuildContext context) async {
+    final newsProvider = context.read<NewsProvider>();
+    await newsProvider.fetchNews(newsProvider.selectedCategory);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // We use context.watch here so the UI rebuilds when the provider notifies listeners
     final newsProvider = context.watch<NewsProvider>();
 
     return Scaffold(
@@ -40,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody(NewsProvider newsProvider) {
-    if (newsProvider.isLoading) {
+    if (newsProvider.isLoading && newsProvider.articles.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -58,9 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  newsProvider.fetchNews(newsProvider.selectedCategory);
-                },
+                onPressed: () => _refreshNews(context),
                 child: const Text('Retry'),
               )
             ],
@@ -73,16 +76,27 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(child: Text('No articles found.'));
     }
 
-    // This is a basic ListView for now. We will replace this with our NewsCard widget next.
-    return ListView.builder(
-      itemCount: newsProvider.articles.length,
-      itemBuilder: (context, index) {
-        final article = newsProvider.articles[index];
-        return ListTile(
-          title: Text(article.title ?? 'No Title'),
-          subtitle: Text(article.source?.name ?? 'No Source'),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => _refreshNews(context),
+      child: ListView.builder(
+        itemCount: newsProvider.articles.length,
+        itemBuilder: (context, index) {
+          final article = newsProvider.articles[index];
+          return NewsCard(
+            article: article,
+            onTap: () {
+              // TODO: Navigate to ArticleDetailScreen
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (_) => ArticleDetailScreen(article: article),
+              //   ),
+              // );
+              print('Tapped on article: ${article.title}');
+            },
+          );
+        },
+      ),
     );
   }
 }
