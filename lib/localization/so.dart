@@ -1,0 +1,20 @@
+const Map<String, String> soTranslations = {
+  'app_title': 'Wararka Som',
+  'categories': 'Qaybaha',
+  'search_hint': 'Raadi warar...',
+  'search_info': 'Qor si aad u raadiso maqaallo.',
+  'no_results': 'Wax maqaal ah lama helin.',
+  'error_loading': 'Soo raridda wararku way fashilantay.',
+  'retry': 'Isku day Mar Kale',
+  'read_more': 'Akhri Sheekada oo Dhan',
+  'by': 'Waxaa Qoray',
+  'unknown_source': 'Isha Lama Yaqaan',
+  // Categories
+  'general': 'Guud',
+  'technology': 'Tignoolajiyada',
+  'sports': 'Ciyaaraha',
+  'business': 'Ganacsiga',
+  'entertainment': 'Madadaalada',
+  'health': 'Caafimaadka',
+  'science': 'Sayniska',
+};

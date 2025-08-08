@@ -1,0 +1,20 @@
+const Map<String, String> enTranslations = {
+  'app_title': 'SomNews',
+  'categories': 'Categories',
+  'search_hint': 'Search for news...',
+  'search_info': 'Start typing to search for articles.',
+  'no_results': 'No articles found.',
+  'error_loading': 'Failed to load news.',
+  'retry': 'Retry',
+  'read_more': 'Read Full Story',
+  'by': 'By',
+  'unknown_source': 'Unknown Source',
+  // Categories
+  'general': 'General',
+  'technology': 'Technology',
+  'sports': 'Sports',
+  'business': 'Business',
+  'entertainment': 'Entertainment',
+  'health': 'Health',
+  'science': 'Science',
+};
